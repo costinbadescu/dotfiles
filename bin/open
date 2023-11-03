@@ -1,0 +1,98 @@
+#!/bin/sh
+# shellcheck disable=SC2016
+# Ignore variable expressions in single quotes.
+set -Cefu
+
+: "${BROWSER:=firefox}"
+: "${EDITOR:=vi}"
+: "${PAGER:=less}"
+: "${SHELL:=/bin/sh}"
+
+archive='\.(cpio|tar(\.(gz|xz))?|tgz|rar|zip)$'
+audio='\.(flac|mp3|wav)$'
+image='\.(jpg|png)$'
+text='\.(djvu|dvi|pdf|ps)$'
+video='\.(mkv|mp4|webm|wmv)$'
+
+rfc='^(RFC|rfc)[ :-]?([0-9]+)$'
+arxiv='^ar[xX]iv:([0-9]{4}.[0-9]+(v[0-9]+)?)$'
+doi='^(doi:)?(10.[0-9]+/[0-9.]+)$'
+
+detach() {
+	nohup "$@" >/dev/null 2>&1 &
+}
+
+match() {
+	printf '%s\n' "$1" | case $# in
+	2) rg -q "$2" ;;
+	3) rg -o -r "$3" "$2" ;;
+	*) return 1 ;;
+	esac
+}
+
+for arg; do
+	[ -f "$arg" ] && {
+		match "$arg" "$audio" && {
+			mpv "$arg"
+			continue
+		}
+
+		match "$arg" "$text" && {
+			detach evince "$arg"
+			continue
+		}
+
+		match "$arg" "$video" && {
+			detach mpv "$arg"
+			continue
+		}
+
+		match "$arg" "$image" && {
+			detach imv "$arg"
+			continue
+		}
+
+		match "$arg" "$archive" && {
+			tmpdir=$(mktemp -d "/tmp/${0##*/}.XXXXXXXX")
+			trap 'rm -rf -- "$tmpdir"' EXIT
+			bsdtar -x -f "$arg" -C "$tmpdir"
+			(cd "$tmpdir" && "$SHELL")
+			rm -rf -- "$tmpdir"
+			exit
+		}
+
+		"$PAGER" "$arg"
+		continue
+	}
+
+	[ -d "$arg" ] && {
+		shfm "$arg"
+	}
+
+	match "$arg" 'https?://(w{3}?\.)?youtube.com' ||
+	match "$arg" 'https?://youtu.be' && {
+		detach mpv "$arg"
+		continue
+	}
+
+	match "$arg" '^https?://' ||
+	match "$arg" '^www\.' && {
+		detach "$BROWSER" "$arg"
+		continue
+	}
+
+	buf=$(match "$arg" "$rfc" '$2') && {
+		detach "$BROWSER" "https://tools.ietf.org/html/rfc${buf}"
+		continue
+	}
+
+	buf=$(match "$arg" "$arxiv" '$1') && {
+		detach "$BROWSER" "https://arxiv.org/abs/${buf}"
+		continue
+	}
+
+	buf=$(match "$arg" "$doi" '$2') && {
+		detach "$BROWSER" "https://doi.org/${buf}"
+		continue
+	}
+done

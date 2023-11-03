@@ -1,0 +1,5 @@
+set -o emacs
+set -o utf8-mode
+
+PS1="${SSH_TTY:+$(uname -n) }"'${PWD/#${HOME}/\~}'
+PS1="${PS1} $(if (( USER_ID )); then print \$; else print \#; fi) "

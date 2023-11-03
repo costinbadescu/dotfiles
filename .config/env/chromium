@@ -1,0 +1,1 @@
+CHROME_FLAGS="--ozone-platform-hint=auto ${CHROME_FLAGS}"

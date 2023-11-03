@@ -1,0 +1,4 @@
+#!/bin/sh
+set -Cefu
+
+gpg-connect-agent -q 'scd serialno' 'learn --force' /bye

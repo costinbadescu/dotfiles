@@ -1,0 +1,3 @@
+GONOSUMDB=off
+GOPATH="$XDG_DATA_HOME"/go
+GOPROXY=direct

@@ -1,0 +1,4 @@
+#!/bin/sh
+set -Cefu
+
+GIT_DIR=~/.dotfiles GIT_WORK_TREE=~ git "$@"

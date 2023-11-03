@@ -1,0 +1,4 @@
+#!/bin/sh
+set -Cefu
+
+oathtool -b --totp -

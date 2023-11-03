@@ -1,0 +1,41 @@
+#!/bin/sh
+set -Cefu
+
+: "${SIG_ALLOWED_SIGNERS:=$HOME/.ssh/allowed_signers}"
+: "${SIG_ID:=}"
+: "${SIG_KEY:=$HOME/.ssh/id_ed25519}"
+
+usage() {
+	prog="${0##*/}"
+
+	printf '%s' "\
+usage:	${prog} -S [file ...]
+	${prog} -V [file ...]
+"
+	exit
+}
+
+sign() {
+	ssh-keygen -Y sign -f "$SIG_KEY" -n "file" "$@"
+}
+
+verify() {
+	if [ -z "$SIG_ID" ]; then
+		SIG_ID=$(ssh-keygen -Y find-principals \
+		    -s "${1}.sig" \
+		    -f "$SIG_ALLOWED_SIGNERS")
+	fi
+
+	ssh-keygen -Y verify \
+	    -f "$SIG_ALLOWED_SIGNERS" \
+	    -I "$SIG_ID" \
+	    -n "file" -s "${1}.sig" < "$1"
+}
+
+while getopts "hS:V:" opt; do
+	case $opt in
+	S) shift; sign "$@" ;;
+	V) shift; for f; do verify "$f"; done ;;
+	*) usage ;;
+	esac
+done

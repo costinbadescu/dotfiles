@@ -1,0 +1,34 @@
+[alias]
+a = add
+af = add --force
+au = add --update
+bl = blame
+br = branch
+ci = commit
+cl = clone
+co = checkout
+d = diff
+l = log --oneline
+ls = ls-files
+mg = merge
+pom = push origin main
+r = remote
+rb = rebase
+s = status
+
+[credential]
+helper = cache
+
+[init]
+defaultBranch = main
+
+[gpg]
+format = ssh
+
+[gpg.ssh]
+allowedSignersFile = ~/.ssh/allowed_signers
+
+[user]
+name = Costin Bădescu
+email = cb@costinbadescu.com
+
